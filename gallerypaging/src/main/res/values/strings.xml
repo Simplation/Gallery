@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GalleryPaging</string>
+    <string name="hello_blank_fragment">textViewContent</string>
+    <string name="photo_tag">%d / %d</string>
+</resources>
