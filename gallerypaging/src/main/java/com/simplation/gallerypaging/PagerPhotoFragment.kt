@@ -16,6 +16,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
@@ -26,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class PagerPhotoFragment : Fragment() {
+    private val galleryViewModel: GalleryViewModel by activityViewModels()
     lateinit var pagerPhotoBinding: FragmentPagerPhotoBinding
 
     override fun onCreateView(
@@ -38,29 +41,37 @@ class PagerPhotoFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val photoList = arguments?.getParcelableArrayList<PhotoItem>("PHOTO_LIST")
+        val adapter = PagerPhotoListAdapter()
+        pagerPhotoBinding.viewPager2.adapter = adapter
 
-        PagerPhotoListAdapter().apply {
-            pagerPhotoBinding.viewPager2.adapter = this
-            submitList(photoList)
-        }
+        galleryViewModel.pageListLiveData.observe(viewLifecycleOwner, {
+            adapter.submitList(it)
+            // 设置点击跳转的值
+            /**
+             * 参数 1: 当前点击的 item
+             * 参数 2: 滑动的动画
+             */
+            pagerPhotoBinding.viewPager2.setCurrentItem(
+                arguments?.getInt("PHOTO_POSITION") ?: 0,
+                false
+            )
+        })
 
         pagerPhotoBinding.viewPager2.registerOnPageChangeCallback(object :
             ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 pagerPhotoBinding.photoTag.text =
-                    resources.getString(R.string.photo_tag, position + 1, photoList?.size)
+                    resources.getString(
+                        R.string.photo_tag,
+                        position + 1,
+                        galleryViewModel.pageListLiveData.value?.size
+                    )
             }
         })
 
-        // 设置点击跳转的值
-        /**
-         * 参数 1: 当前点击的 item
-         * 参数 2: 滑动的动画
-         */
-        pagerPhotoBinding.viewPager2.setCurrentItem(arguments?.getInt("PHOTO_POSITION") ?: 0, false)
-        pagerPhotoBinding.viewPager2.orientation = ViewPager2.ORIENTATION_VERTICAL
+        // 设置 viewPager2 为垂直方向
+        // pagerPhotoBinding.viewPager2.orientation = ViewPager2.ORIENTATION_VERTICAL
 
         pagerPhotoBinding.saveButton.setOnClickListener {
             if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(

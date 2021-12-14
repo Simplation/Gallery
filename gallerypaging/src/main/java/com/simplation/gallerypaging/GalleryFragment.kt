@@ -4,13 +4,15 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.simplation.gallerypaging.databinding.FragmentGalleryBinding
 
 class GalleryFragment : Fragment() {
     lateinit var galleryBinding: FragmentGalleryBinding
-    private val galleryViewModel: GalleryViewModel by viewModels()
+
+    // by viewModels() 和 activityViewModels()
+    private val galleryViewModel: GalleryViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,8 +46,9 @@ class GalleryFragment : Fragment() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // onActivityCreated() 被废弃
 
         // 设置开启菜单选项
         setHasOptionsMenu(true)
@@ -56,7 +59,7 @@ class GalleryFragment : Fragment() {
             ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
         )[GalleryViewModel::class.java]*/
 
-        val galleryAdapter = GalleryAdapter()
+        val galleryAdapter = GalleryAdapter(galleryViewModel)
         galleryBinding.recyclerView.apply {
             adapter = galleryAdapter
             // layoutManager = GridLayoutManager(this@GalleryFragment.context, 2)
@@ -67,7 +70,6 @@ class GalleryFragment : Fragment() {
 
         galleryViewModel.pageListLiveData.observe(viewLifecycleOwner, {
             galleryAdapter.submitList(it)
-            galleryBinding.swipeLayoutGallery.isRefreshing = false
         })
 
         galleryBinding.swipeLayoutGallery.setOnClickListener {
@@ -76,6 +78,8 @@ class GalleryFragment : Fragment() {
 
         galleryViewModel.networkStatus.observe(viewLifecycleOwner, {
             Log.d("TAG", "onActivityCreated: $it")
+            galleryAdapter.updateNetworkStatus(it)
+            galleryBinding.swipeLayoutGallery.isRefreshing = it == NetworkStatus.INITIAL_LOADING
         })
     }
 }
