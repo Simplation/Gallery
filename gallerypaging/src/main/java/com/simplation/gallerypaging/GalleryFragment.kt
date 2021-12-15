@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.simplation.gallerypaging.databinding.FragmentGalleryBinding
 
 class GalleryFragment : Fragment() {
-    lateinit var galleryBinding: FragmentGalleryBinding
+    private lateinit var galleryBinding: FragmentGalleryBinding
 
     // by viewModels() 和 activityViewModels()
     private val galleryViewModel: GalleryViewModel by activityViewModels()
